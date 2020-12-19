@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "323207374263",
+    "firebase_url": "https://psychic-84912.firebaseio.com",
+    "project_id": "psychic-84912",
+    "storage_bucket": "psychic-84912.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:323207374263:android:283dc81810996d3e58b432",
+        "android_client_info": {
+          "package_name": "com.example.psychic"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "323207374263-bv59cacvgjdin5g8ou5dt8eqligvfm01.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.psychic",
+            "certificate_hash": "8b0a0416c87ed79f7bd739f332e5f234fdecbf59"
+          }
+        },
+        {
+          "client_id": "323207374263-fcuoic36ncc88gu8q136g6arbmun0hk0.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDmTkxHB83yJ3OFvAjgEH7sS91CXVGCah8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "323207374263-fcuoic36ncc88gu8q136g6arbmun0hk0.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
