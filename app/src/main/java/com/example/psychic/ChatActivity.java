@@ -2,6 +2,8 @@ package com.example.psychic;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageButton;
@@ -11,6 +13,7 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
+import com.bumptech.glide.Glide;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
@@ -28,9 +31,9 @@ public class ChatActivity extends AppCompatActivity {
     TextView username;
     FirebaseUser fuser;
     DatabaseReference reference;
- /*   ImageButton btn_send;
+    ImageButton btn_send;
     EditText text_send;
-    CircleImageView profile_image;*/
+    CircleImageView profile_image;
     Intent intent;
 
 
@@ -42,17 +45,12 @@ public class ChatActivity extends AppCompatActivity {
 
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-        getSupportActionBar().setTitle("Chat");
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        getSupportActionBar().setTitle("");
+       // getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
-        toolbar.setNavigationOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                finish();
-            }
-        });
-        /*
-      //  profile_image = findViewById(R.id.profile_image);
+
+/**/
+        profile_image = findViewById(R.id.profile_image);
         username = findViewById(R.id.username);
 
         intent = getIntent();
@@ -63,13 +61,13 @@ public class ChatActivity extends AppCompatActivity {
         reference.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-             /* User user = dataSnapshot.getValue();
+              User user =  dataSnapshot.getValue(User.class);
                 username.setText(user.getUsername());
-                if (user.getImageURL.equals("default")){
+                if (user.getImgURL().equals("default")){
                     profile_image.setImageResource(R.mipmap.ic_launcher);
 
                 }else{
-                    Glide.with(ChatActivity.this).load(user.getImageURL()).into(profile_image);
+                    Glide.with(ChatActivity.this).load(user.getImgURL()).into(profile_image);
                 }
             }
 
@@ -80,6 +78,24 @@ public class ChatActivity extends AppCompatActivity {
         });
 
 
-*/
+
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu,menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        switch(item.getItemId()){
+            case R.id.logout:
+            FirebaseAuth.getInstance().signOut();
+            startActivity(new Intent(ChatActivity.this,StartActivity.class));
+            finish();
+            return true;
+        }
+        return false;
     }
 }
