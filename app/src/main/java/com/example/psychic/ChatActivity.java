@@ -3,6 +3,7 @@ package com.example.psychic;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.StrictMode;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -19,7 +20,18 @@ import androidx.appcompat.widget.Toolbar;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.android.volley.DefaultRetryPolicy;
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.StringRequest;
+import com.android.volley.toolbox.Volley;
 import com.bumptech.glide.Glide;
+import com.google.android.gms.common.GooglePlayServicesNotAvailableException;
+import com.google.android.gms.common.GooglePlayServicesRepairableException;
+import com.google.android.gms.security.ProviderInstaller;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
@@ -28,21 +40,27 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.DataOutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.net.URLEncoder;
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLContext;
 
 import de.hdodenhof.circleimageview.CircleImageView;
 import okhttp3.OkHttpClient;
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Retrofit;
-import retrofit2.converter.gson.GsonConverterFactory;
+
 
 public class ChatActivity extends AppCompatActivity {
 
@@ -99,11 +117,34 @@ public class ChatActivity extends AppCompatActivity {
 //        adapter.notifyDataSetChanged();
 //        recyclerView.smoothScrollToPosition(adapter.getItemCount());
         username = findViewById(R.id.username);
-        messagesList.add(new Message("1","2","hi",System.currentTimeMillis()/1000));
+     /*   messagesList.add(new Message("1","2","hi",System.currentTimeMillis()/1000));
         messagesList.add(new Message("2","1","hi",System.currentTimeMillis()/1000));
         messagesList.add(new Message("1","2","hi",System.currentTimeMillis()/1000));
         messagesList.add(new Message("2","1","hi",System.currentTimeMillis()/1000));
-        messagesList.add(new Message("1","2","hi",System.currentTimeMillis()/1000));
+        messagesList.add(new Message("1","2","hi",System.currentTimeMillis()/1000));*/
+
+     //things you do to make the code work or like for love or whatever
+     // btw, this just tells the os that all network related requests are not being burdened on the main thread
+        int SDK_INT = android.os.Build.VERSION.SDK_INT;
+        if (SDK_INT > 8) {
+            StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder()
+                    .permitAll().build();
+            StrictMode.setThreadPolicy(policy);
+        }
+        //for android 8 or greater, this has to be done for some freaking security update
+        try {
+            // Google Play will install latest OpenSSL
+            ProviderInstaller.installIfNeeded(getApplicationContext());
+            SSLContext sslContext;
+            sslContext = SSLContext.getInstance("TLSv1.2");
+            sslContext.init(null, null, null);
+            sslContext.createSSLEngine();
+        } catch (GooglePlayServicesRepairableException | GooglePlayServicesNotAvailableException
+                | NoSuchAlgorithmException | KeyManagementException e) {
+            e.printStackTrace();
+        }
+
+
 
         adapter = new MessageListJavaAdapter(this, messagesList,"2","1");
         recyclerView = findViewById(R.id.recycler_view);
@@ -123,10 +164,19 @@ public class ChatActivity extends AppCompatActivity {
         send.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View view) {
-               // messagesList.add(new Message("1","2",messageContent.getText().toString(),System.currentTimeMillis()/1000));
+                if (messageContent.getText().toString().equals("")) {
+                    Toast.makeText(ChatActivity.this,"Empty Message!",Toast.LENGTH_SHORT).show();
+                }else{
 
-                sendMessage();
-                messageContent.setText("");
+                    String msg = messageContent.getText().toString();
+                    messagesList.add(new Message("1","2",msg,System.currentTimeMillis()/1000));
+                    messageContent.setText("");
+                    adapter.notifyDataSetChanged();
+                    recyclerView.smoothScrollToPosition(adapter.getItemCount());
+                    PostUser(msg);
+
+
+                }
 
             }
         });
@@ -154,83 +204,53 @@ public class ChatActivity extends AppCompatActivity {
         return false;
     }
 
-    private void sendMessage() {
 
-        String userID = fuser.getUid();
-        String msg = messageContent.getText().toString();
-        messagesList.add(new Message("1","2",msg,System.currentTimeMillis()/1000));
-        adapter.notifyDataSetChanged();
-        recyclerView.smoothScrollToPosition(adapter.getItemCount());
-      /*  try {
-            URL url = new URL("39.32.152.158:9000");
-            String protocol = url.getProtocol();
-            System.out.println(String.format("A::main: protocol = '%s'", protocol));
-            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-            conn.setRequestMethod("POST");
-            conn.setRequestProperty("Content-Type", "application/json;charset=UTF-8");
-            conn.setRequestProperty("Accept","application/json");
-            conn.setDoOutput(true);
-            conn.setDoInput(true);
+    void PostUser(final String msg){
 
-            JSONObject jsonParam = new JSONObject();
-            jsonParam.put("msg", msg);
-
-            Log.i("JSON", jsonParam.toString());
-            DataOutputStream os = new DataOutputStream(conn.getOutputStream());
-            //os.writeBytes(URLEncoder.encode(jsonParam.toString(), "UTF-8"));
-            os.writeBytes(jsonParam.toString());
-
-            os.flush();
-            os.close();
-
-           // Log.i("STATUS", String.valueOf(conn.getResponseCode()));
-          //  Log.i("MSG" , conn.getResponseMessage());
-            String responseMsg = conn.getResponseMessage();
-            messagesList.add(new Message("2","1",responseMsg,System.currentTimeMillis()/1000));
-            adapter.notifyDataSetChanged();
-            recyclerView.smoothScrollToPosition(adapter.getItemCount());
-            conn.disconnect();
-
-        } catch (Exception e) {
+        RequestQueue MyRequestQueue = Volley.newRequestQueue(this);
+        String url = "http://39.32.152.158:9000";
+        final String userID = fuser.getUid();
+        Log.d("UID",userID);
+        JSONObject postparams = new JSONObject();
+        try {
+            postparams.put("sender",userID);
+            postparams.put("message", msg);
+        } catch (JSONException e) {
             e.printStackTrace();
-        }*/
-
-
-        OkHttpClient okHttpClient = new OkHttpClient();
-        Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl("39.32.152.158:9000")
-                .client(okHttpClient)
-                .addConverterFactory(GsonConverterFactory.create())
-                .build();
-        if (msg.trim().isEmpty()) {
-            Toast.makeText(ChatActivity.this, "Empty message!", Toast.LENGTH_LONG).show();
-        } else {
-            messagesList.add(new Message(userID,"bot",msg,System.currentTimeMillis()/1000));
         }
-
-      //  Toast.makeText(ChatActivity.this, ""+msg, Toast.LENGTH_LONG).show();
-
-        Message userMessageSend = retrofit.create(Message.class);
-        Call<List<Message>> response = userMessageSend.sendMessage(msg);
-        response.enqueue(new Callback<List<Message>>() {
+       // StringRequest MyStringRequest = new StringRequest(Request.Method.POST, url, new Response.Listener<String>()
+        JsonObjectRequest MyJsonRequest = new JsonObjectRequest(Request.Method.POST,url,postparams,new Response.Listener<JSONObject>()
+        {
             @Override
-            public void onResponse(Call<List<Message>> call, Response<List<Message>> response) {
-                if(response.body() == null || response.body().size() == 0){
-                    showTextView("Sorry didn't understand",BOT);
+            public void onResponse(JSONObject response) {
+                try {
+
+                    Log.d("response",response.get("text").toString());
+                    messagesList.add(new
+                            Message("2","1",response.get("text").toString(),
+                            System.currentTimeMillis()/1000));
+
+
+
+
+                } catch (JSONException e) {
+                    e.printStackTrace();
                 }
-                else{
-                    BotResponse botResponse = response.body().get(0);
-                    showTextView(botResponse.getText(),BOT);
-                }
+                adapter.notifyDataSetChanged();
+                recyclerView.smoothScrollToPosition(adapter.getItemCount());
             }
+        }, new Response.ErrorListener() {
             @Override
-            public void onFailure(Call<List<BotResponse>> call, Throwable t) {
-                showTextView("Waiting for message",BOT);
-                Toast.makeText(MainActivity.this,""+t.getMessage(),Toast.LENGTH_SHORT).show();
+            public void onErrorResponse(VolleyError error) {
+
             }
         });
-
-}
+        MyRequestQueue.add(MyJsonRequest);
+        MyJsonRequest.setRetryPolicy(new DefaultRetryPolicy(
+                15000,
+                DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
+                DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
+    }
 
 
 }
