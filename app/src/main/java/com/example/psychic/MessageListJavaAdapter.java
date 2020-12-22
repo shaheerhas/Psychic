@@ -1,13 +1,19 @@
 package com.example.psychic;
 
+import android.content.ClipData;
+import android.content.ClipboardManager;
 import android.content.Context;
+import android.content.Intent;
+import android.net.Uri;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.squareup.picasso.Picasso;
@@ -72,13 +78,32 @@ public class MessageListJavaAdapter extends RecyclerView.Adapter<RecyclerView.Vi
     }
 
     @Override
-    public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
+    public void onBindViewHolder(final RecyclerView.ViewHolder holder, final int position) {
         if (list.get(position).senderId.equals(rid)) {
             ((MessageInViewHolder) holder).bind(position);
+            ((MessageInViewHolder) holder).messageTV.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                 //   Toast.makeText(context, ((MessageInViewHolder) holder).messageTV.getText().toString().trim()+" ", Toast.LENGTH_SHORT).show();
+                    String msg = ((MessageInViewHolder) holder).messageTV.getText().toString().trim();
+                    String[]msgs= msg.split(":");
+
+//                    Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(msgs[1]));
+//                    ((AppCompatActivity)context).startActivity(browserIntent);
+                    ClipboardManager clipboard = (ClipboardManager) context.getSystemService(Context.CLIPBOARD_SERVICE);
+                    ClipData clip = ClipData.newPlainText("label", msgs[1]+":"+msgs[2].replace("\n",""));
+                    if (clipboard == null || clip == null) return;
+                    Toast.makeText(context, "Copied to clipboard", Toast.LENGTH_SHORT).show();
+                    clipboard.setPrimaryClip(clip);
+
+                }
+            });
         }
         else{
             ((MessageOutViewHolder) holder).bind(position);
         }
+
+
 
     }
 

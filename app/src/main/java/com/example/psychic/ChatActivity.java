@@ -1,5 +1,8 @@
 package com.example.psychic;
 
+import android.content.ClipData;
+import android.content.ClipboardManager;
+import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
@@ -229,10 +232,6 @@ public class ChatActivity extends AppCompatActivity {
                     messagesList.add(new
                             Message("2","1",response.get("text").toString(),
                             System.currentTimeMillis()/1000));
-
-
-
-
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
