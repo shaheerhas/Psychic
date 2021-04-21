@@ -5,7 +5,10 @@ public class User {
     private String name;
     private String username;
     private String imgURL;
-    public User(){}
+
+    public User() {
+    }
+
     public User(String id, String name, String username, String imgURL) {
         this.id = id;
         this.name = name;

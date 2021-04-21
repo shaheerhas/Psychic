@@ -1,19 +1,14 @@
 package com.example.psychic;
 
-import android.content.ClipData;
-import android.content.ClipboardManager;
-import android.content.Context;
 import android.content.Intent;
-import android.net.Uri;
 import android.os.Bundle;
-import android.os.StrictMode;
+import android.text.method.TextKeyListener;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageButton;
-import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -28,81 +23,59 @@ import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
+import com.android.volley.toolbox.JsonArrayRequest;
 import com.android.volley.toolbox.JsonObjectRequest;
-import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
-import com.bumptech.glide.Glide;
-import com.google.android.gms.common.GooglePlayServicesNotAvailableException;
-import com.google.android.gms.common.GooglePlayServicesRepairableException;
-import com.google.android.gms.security.ProviderInstaller;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ValueEventListener;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.DataOutputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.net.URLEncoder;
-import java.security.KeyManagementException;
-import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-
-import javax.net.ssl.HttpsURLConnection;
-import javax.net.ssl.SSLContext;
-
-import de.hdodenhof.circleimageview.CircleImageView;
-import okhttp3.OkHttpClient;
 
 
 public class ChatActivity extends AppCompatActivity {
 
+
+    // server address for chat history api/users/history/user_hash/
+
+    public FirebaseAuth mAuth;
     TextView username;
     FirebaseUser fuser;
-    DatabaseReference reference;
-    ImageButton btn_send;
-    EditText text_send;
-    CircleImageView profile_image;
-    Intent intent;
+    /*    DatabaseReference reference;
+        ImageButton btn_send;
+        EditText text_send;
+        CircleImageView profile_image;
+        Intent intent;
 
-
-    private FirebaseAuth mAuth;
-    RecyclerView recyclerView;
-    FirebaseDatabase database;
-    DatabaseReference reference2;
+        FirebaseDatabase database;
+        DatabaseReference reference2;
+        Uri selectedImage = null;*/
     MessageListJavaAdapter adapter;
-    ImageButton send,selectImage,clearImage;
+    ImageButton send, selectImage, clearImage;
     View imagePreviewBackground;
     EditText messageContent;
-    Uri selectedImage=null;
+    RecyclerView recyclerView;
     ImageButton backButton;
     TextView appbar_heading;
-
-    // Populate dummy messages in List, you can implement your code here
     ArrayList<Message> messagesList = new ArrayList<>();
+
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chat);
 
-        Intent data=getIntent();
-        String id=data.getStringExtra("id");
+        Intent data = getIntent();
+        String id = data.getStringExtra("id");
 
         //String senderId= Objects.requireNonNull(mAuth.getCurrentUser()).getUid();
-        send=findViewById(R.id.send_button);
-        selectImage=findViewById(R.id.select_image);
-        messageContent=findViewById(R.id.message_content);
+        send = findViewById(R.id.send_button);
+        selectImage = findViewById(R.id.select_image);
+        messageContent = findViewById(R.id.message_content);
         backButton = findViewById(R.id.backButton);
         clearImage = findViewById(R.id.clear_image);
         imagePreviewBackground = findViewById(R.id.image_preview_bg);
@@ -117,8 +90,6 @@ public class ChatActivity extends AppCompatActivity {
         getSupportActionBar().setTitle("");
 
 
-//        adapter.notifyDataSetChanged();
-//        recyclerView.smoothScrollToPosition(adapter.getItemCount());
         username = findViewById(R.id.username);
      /*   messagesList.add(new Message("1","2","hi",System.currentTimeMillis()/1000));
         messagesList.add(new Message("2","1","hi",System.currentTimeMillis()/1000));
@@ -126,35 +97,18 @@ public class ChatActivity extends AppCompatActivity {
         messagesList.add(new Message("2","1","hi",System.currentTimeMillis()/1000));
         messagesList.add(new Message("1","2","hi",System.currentTimeMillis()/1000));*/
 
-     //things you do to make the code work or like for love or whatever
-     // btw, this just tells the os that all network related requests are not being burdened on the main thread
-        int SDK_INT = android.os.Build.VERSION.SDK_INT;
-        if (SDK_INT > 8) {
-            StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder()
-                    .permitAll().build();
-            StrictMode.setThreadPolicy(policy);
-        }
-        //for android 8 or greater, this has to be done for some freaking security update
-        try {
-            // Google Play will install latest OpenSSL
-            ProviderInstaller.installIfNeeded(getApplicationContext());
-            SSLContext sslContext;
-            sslContext = SSLContext.getInstance("TLSv1.2");
-            sslContext.init(null, null, null);
-            sslContext.createSSLEngine();
-        } catch (GooglePlayServicesRepairableException | GooglePlayServicesNotAvailableException
-                | NoSuchAlgorithmException | KeyManagementException e) {
-            e.printStackTrace();
-        }
-
-
-
-        adapter = new MessageListJavaAdapter(this, messagesList,"2","1");
+        // populate messages from DB in the messages list
+        GetMessageList();
+        adapter = new MessageListJavaAdapter(this, messagesList, "2", "1");
         recyclerView = findViewById(R.id.recycler_view);
         LinearLayoutManager lm = new LinearLayoutManager(this);
         lm.setStackFromEnd(true);
         recyclerView.setLayoutManager(lm);
         recyclerView.setAdapter(adapter);
+
+
+        adapter.notifyDataSetChanged();
+        recyclerView.smoothScrollToPosition(adapter.getItemCount());
 
 
         backButton.setOnClickListener(new View.OnClickListener() {
@@ -163,78 +117,79 @@ public class ChatActivity extends AppCompatActivity {
                 finish();
             }
         });
-
-        send.setOnClickListener(new View.OnClickListener(){
+// send message from text dialogue
+        send.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 if (messageContent.getText().toString().equals("")) {
-                    Toast.makeText(ChatActivity.this,"Empty Message!",Toast.LENGTH_SHORT).show();
-                }else{
-
+                    Toast.makeText(ChatActivity.this, "Empty Message!", Toast.LENGTH_SHORT).show();
+                } else {
                     String msg = messageContent.getText().toString();
-                    messagesList.add(new Message("1","2",msg,System.currentTimeMillis()/1000));
-                    messageContent.setText("");
+                    long timestamp = System.currentTimeMillis() / 1000;
+                    messagesList.add(new Message("1", "2", msg, timestamp));
+                    if (messageContent.length() > 0) {
+                        TextKeyListener.clear(messageContent.getText());
+                    }
                     adapter.notifyDataSetChanged();
                     recyclerView.smoothScrollToPosition(adapter.getItemCount());
-                    PostUser(msg);
-
-
+                    PostMessage(msg, timestamp);
                 }
-
             }
         });
-
-
     }
-
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.menu,menu);
+        getMenuInflater().inflate(R.menu.menu, menu);
         return true;
     }
 
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-        switch(item.getItemId()){
+        switch (item.getItemId()) {
             //user logs out
             case R.id.logout:
-            FirebaseAuth.getInstance().signOut();
-            startActivity(new Intent(ChatActivity.this,StartActivity.class));
-            finish();
-            return true;
+                FirebaseAuth.getInstance().signOut();
+                startActivity(new Intent(ChatActivity.this, StartActivity.class));
+                finish();
+                return true;
         }
         return false;
     }
 
 
-    void PostUser(final String msg){
+    void PostMessage(final String msg, final Long timestamp) {
 
         RequestQueue MyRequestQueue = Volley.newRequestQueue(this);
-        String url = "http://39.32.152.158:9000";
+        String url = StartActivity.serverAddress + "/api/users/message/";
         final String userID = fuser.getUid();
-        Log.d("UID",userID);
+        Log.d("UID", userID);
         JSONObject postparams = new JSONObject();
         try {
-            postparams.put("sender",userID);
-            postparams.put("message", msg);
+
+            postparams.put("user", userID);
+            postparams.put("msg_text", msg);
+            postparams.put("timestamp", timestamp);
+            postparams.put("is_bot", false);
+            Log.d("TRY", postparams.toString());
         } catch (JSONException e) {
             e.printStackTrace();
+
         }
-       // StringRequest MyStringRequest = new StringRequest(Request.Method.POST, url, new Response.Listener<String>()
-        JsonObjectRequest MyJsonRequest = new JsonObjectRequest(Request.Method.POST,url,postparams,new Response.Listener<JSONObject>()
-        {
+        JsonObjectRequest MyJsonRequest = new JsonObjectRequest(Request.Method.POST, url, postparams, new Response.Listener<JSONObject>() {
             @Override
             public void onResponse(JSONObject response) {
                 try {
 
-                    Log.d("response",response.get("text").toString());
+                    Log.d("RESSS", response.get("msg_text").toString() + "RES");
                     messagesList.add(new
-                            Message("2","1",response.get("text").toString(),
-                            System.currentTimeMillis()/1000));
+                            Message("2", "1", response.get("msg_text").toString(),
+                            Long.parseLong(response.get("timestamp").toString())));
                 } catch (JSONException e) {
                     e.printStackTrace();
+                    Log.d("CATCH", e.getMessage());
                 }
+                Log.d("CATCH", "RES");
                 adapter.notifyDataSetChanged();
                 recyclerView.smoothScrollToPosition(adapter.getItemCount());
             }
@@ -244,11 +199,57 @@ public class ChatActivity extends AppCompatActivity {
 
             }
         });
+
         MyRequestQueue.add(MyJsonRequest);
+        //set timeout to 15 seconds
         MyJsonRequest.setRetryPolicy(new DefaultRetryPolicy(
                 15000,
                 DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
                 DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
+    }
+
+
+    Boolean GetMessageList() {
+
+        final Boolean[] messagesAdded = {false};
+        RequestQueue MyRequestQueue = Volley.newRequestQueue(this);
+        String url = StartActivity.serverAddress + "/api/users/message/";
+
+        JsonArrayRequest MyJsonRequest = new JsonArrayRequest(Request.Method.GET, url, null, new Response.Listener<JSONArray>() {
+            @Override
+            public void onResponse(JSONArray response) {
+                if (response.length() > 0)
+                    messagesAdded[0] = true;
+
+                for (int i = 0; i < response.length(); i++) {
+                    try {
+                        JSONObject message = response.getJSONObject(i);
+                        String msgText = message.get("msg_text").toString();
+                        Log.d("GETMESSAGES", message.get("msg_text").toString());
+                        Long timeStamp = Long.parseLong(message.get("timestamp").toString());
+                        Boolean isBot = Boolean.parseBoolean(message.get("is_bot").toString());
+                        if (isBot)
+                            messagesList.add(new Message("2", "1", msgText, timeStamp));
+                        else
+                            messagesList.add(new Message("1", "2", msgText, timeStamp));
+
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+            }
+        });
+        MyRequestQueue.add(MyJsonRequest);
+        //set timeout to 15 seconds
+        MyJsonRequest.setRetryPolicy(new DefaultRetryPolicy(
+                15000,
+                DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
+                DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
+        return messagesAdded[0];
     }
 
 

@@ -12,8 +12,8 @@ import com.google.firebase.auth.FirebaseUser;
 
 public class StartActivity extends AppCompatActivity {
 
-    Button register,login;
-
+    public static final String serverAddress = "http://39.32.126.18:9001";
+    Button register, login;
     FirebaseUser firebaseUser;
 
     @Override
@@ -22,8 +22,9 @@ public class StartActivity extends AppCompatActivity {
 
         //if the user is already logged in
         firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
-        if(firebaseUser!=null){
-            Intent intent = new Intent(StartActivity.this,ChatActivity.class);
+
+        if (firebaseUser != null) {
+            Intent intent = new Intent(StartActivity.this, ChatActivity.class);
             startActivity(intent);
             finish();
         }
@@ -33,7 +34,6 @@ public class StartActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_start);
-
 
 
         login = findViewById(R.id.login);

@@ -6,16 +6,16 @@
     android:layout_height="match_parent"
     android:background="@color/colorPrimary"
     android:fillViewport="true"
-    tools:context=".RegisterActivity"
-    >
+    tools:context=".RegisterActivity">
+
     <include
         android:id="@+id/toolbar"
-        layout="@layout/bar_layout"/>
+        layout="@layout/bar_layout" />
 
     <LinearLayout
-        android:layout_below="@id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_below="@id/toolbar"
 
         android:gravity="center_horizontal"
         android:orientation="vertical"
@@ -26,8 +26,8 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Create a new Account"
-            android:textSize="20sp"
-            android:textColor="@color/white" />
+            android:textColor="@color/white"
+            android:textSize="20sp" />
 
         <EditText
             android:id="@+id/username"
@@ -40,14 +40,13 @@
             android:drawablePadding="10dp"
             android:fontFamily="@font/roboto_light"
             android:hint="Username"
+            android:inputType="text"
             android:padding="10dp"
             android:textColor="#FFFFFF"
             android:textColorHint="#FFFFFF"
-            android:textSize="18sp"
             android:textCursorDrawable="@null"
 
-            android:inputType="text"
-           />
+            android:textSize="18sp" />
 
         <EditText
             android:id="@+id/email"
@@ -61,14 +60,13 @@
             android:fontFamily="@font/roboto_light"
 
             android:hint="Email"
+            android:inputType="textEmailAddress"
             android:padding="10dp"
             android:textColor="#FFFFFF"
             android:textColorHint="#FFFFFF"
-            android:textSize="18sp"
             android:textCursorDrawable="@null"
 
-            android:inputType="textEmailAddress"
-            />
+            android:textSize="18sp" />
 
         <EditText
             android:id="@+id/password"
@@ -80,16 +78,15 @@
             android:drawableLeft="@drawable/ic_baseline_vpn_key_24"
             android:drawablePadding="10dp"
             android:fontFamily="@font/roboto_light"
-            android:textCursorDrawable="@null"
-
             android:hint="Password"
+
+            android:inputType="textPassword"
             android:padding="10dp"
             android:textColor="@color/white"
             android:textColorHint="@color/white"
-            android:textSize="18sp"
+            android:textCursorDrawable="@null"
 
-            android:inputType="textPassword"
-            />
+            android:textSize="18sp" />
 
         <Button
             android:id="@+id/btn_register"
@@ -100,7 +97,7 @@
             android:text="Login"
             android:textAllCaps="false"
             android:textColor="@color/colorPrimary"
-            android:textSize="18sp"  />
+            android:textSize="18sp" />
 
 
     </LinearLayout>
